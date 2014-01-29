@@ -1,21 +1,18 @@
-# == Definition: mcollective::application
+# Definition: mcollective::application
 #
 # Deploys an MCollective application.
 #
 # You should declare mcollective::client before using this.
 #
-# === Parameters
-#
+# Parameters:
 #   ['ensure']  - Whether the plugin should be present or absent.
 #   ['source']  - Where to get the application from.
 #                 Defaults to "puppet:///modules/${module_name}/application/${name}.rb"
 #
-# === Actions
-#
+# Actions:
 # - Deploys an MCollective application.
 #
-# === Sample Usage
-#
+# Sample Usage:
 #   mcollective::application { 'healthcheck':
 #     ensure         => present,
 #   }
@@ -28,16 +25,12 @@ define mcollective::application (
     fail('You must declare class mcollective::client before using mcollective::application')
   }
 
-  include ::mcollective::params
-  $libdir = $mcollective::params::libdir
-  validate_absolute_path($libdir)
-
   $filesrc = $source ? {
     ''      => "puppet:///modules/${module_name}/application/${name}.rb",
     default => $source,
   }
 
-  file {"${libdir}/mcollective/application/${name}.rb":
+  file {"${mcollective::client::mcollective_libdir}/mcollective/application/${name}.rb":
     ensure => $ensure,
     source => $filesrc,
     owner  => 'root',

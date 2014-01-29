@@ -1,18 +1,17 @@
-# == Class: mcollective
+# Class: mcollective
 #
 # This class provides a simple way to deploy MCollective nodes and clients.
 # It will install and configure the necessary packages.
 #
-# This module supports generic STOMP, ActiveMQ and RabbitMQ connectors,
+# This module supports generic STOMP and RabbitMQ connectors,
 # with optional SSL support.
 #
 # It supports PSK and SSL as authentication methods.
 #
-# === Parameters
-#
-#   ['use_node']          - Whether to install an MCollective node.
+# Parameters:
+#   ['node']              - Whether to install an MCollective node.
 #                           Defaults to true.
-#   ['use_client']        - Whether to install an MCollective client.
+#   ['client']            - Whether to install an MCollective client.
 #                           Defaults to false.
 #   ['broker_host']       - The middleware broker host to use.
 #   ['broker_port']       - The middleware broker port to use.
@@ -42,21 +41,7 @@
 #                                     private client key.
 #   ['security_ssl_client_public']  - If SSL is used, the path to the SSL
 #                                     public client key.
-#   ['security_aes_server_private'] - If AES is used, the path to the AES
-#                                     private server key (shared).
-#   ['security_aes_server_public']  - If AES is used, the path to the AES
-#                                     public server key (shared).
-#   ['security_aes_client_private'] - If AES is used, the path to the AES
-#                                     private client key.
-#   ['security_aes_client_public']  - If AES is used, the path to the AES
-#                                     public client key.
-#   ['security_aes_send_pubkey']    - If AES is used, whether to send
-#                                     the AES public key.
-#   ['security_aes_learn_pubkeys']  - If AES is used, whether to learn
-#                                     the AES public keys.
-#   ['security_aes_enforce_ttl']    - If AES is used, whether to enforce TTL.
-#   ['connector']         - The connector to use. Either 'stomp', 'activemq'
-#                           or 'rabbitmq'.
+#   ['connector']         - The connector to use. Either 'stomp' or 'rabbitmq'.
 #                           Defaults to 'rabbitmq'.
 #   ['puppetca_cadir']    - Path to the Puppet CA directory.
 #   ['rpcauthorization']  - Whether to use RPC authorization.
@@ -73,23 +58,11 @@
 #                           Defaults to '/etc/mcollective/ssl/clients'.
 #   ['policies_dir']      - Path to the policies directory.
 #                           Defaults to '/etc/mcollective/policies'.
-#   ['direct_addressing'] - Enable direct addressing.
-#                           Defaults to '0'.
-#   ['registration']      - The registration plugin to use
-#                           Defaults to 'AgentList.
-#   ['registerinterval']  - Registration interval
-#                           Defaults to '300'.
-#   ['registration_collective']    - The registration collective to use
-#                                    Defaults to undef.
-#   ['ssl_source_dir']    - Where to get certificates from.
-#                           Defaults to undef.
 #
-# === Actions
-#
+# Actions:
 # - Deploys MCollective nodes and clients
 #
-# === Sample Usage
-#
+# Sample Usage:
 #   class { '::mcollective':
 #     broker_host       => 'rabbitmq.example.com',
 #     broker_port       => '61614',
@@ -107,8 +80,8 @@ class mcollective (
   $broker_host,
   $broker_port,
   $security_provider,
-  $use_node = $mcollective::params::use_node,
-  $use_client = $mcollective::params::use_client,
+  $node = $mcollective::params::node,
+  $client = $mcollective::params::client,
   $broker_vhost = $mcollective::params::broker_vhost,
   $broker_user = $mcollective::params::broker_user,
   $broker_password = $mcollective::params::broker_password,
@@ -121,13 +94,6 @@ class mcollective (
   $security_ssl_server_public = $mcollective::params::security_ssl_server_public,
   $security_ssl_client_private = $mcollective::params::security_ssl_client_private,
   $security_ssl_client_public = $mcollective::params::security_ssl_client_public,
-  $security_aes_server_private = $mcollective::params::security_aes_server_private,
-  $security_aes_server_public = $mcollective::params::security_aes_server_public,
-  $security_aes_client_private = $mcollective::params::security_aes_client_private,
-  $security_aes_client_public = $mcollective::params::security_aes_client_public,
-  $security_aes_send_pubkey = $mcollective::params::security_aes_send_pubkey,
-  $security_aes_learn_pubkeys = $mcollective::params::security_aes_learn_pubkeys,
-  $security_aes_enforce_ttl = $mcollective::params::security_aes_enforce_ttl,
   $connector = $mcollective::params::connector,
   $puppetca_cadir = $mcollective::params::puppetca_cadir,
   $rpcauthorization = $mcollective::params::rpcauthorization,
@@ -136,22 +102,52 @@ class mcollective (
   $rpcauth_enable_default = $mcollective::params::rpcauth_enable_default,
   $cert_dir = $mcollective::params::cert_dir,
   $policies_dir = $mcollective::params::policies_dir,
-  $direct_addressing = $mcollective::params::direct_addressing,
-  $registration = $mcollective::params::registration,
-  $registerinterval = $mcollective::params::registerinterval,
-  $registration_collective = undef,
-  $ssl_source_dir = undef,
 ) inherits ::mcollective::params {
 
-  include ::mcollective::directories
-
-  if ($use_node) {
-    Class['::mcollective'] ->
-    class { '::mcollective::node': }
+  if ($node) {
+    class { '::mcollective::node':
+      broker_host                => $broker_host,
+      broker_port                => $broker_port,
+      security_provider          => $security_provider,
+      broker_vhost               => $broker_vhost,
+      broker_user                => $broker_user,
+      broker_password            => $broker_password,
+      broker_ssl                 => $broker_ssl,
+      broker_ssl_cert            => $broker_ssl_cert,
+      broker_ssl_key             => $broker_ssl_key,
+      broker_ssl_ca              => $broker_ssl_ca,
+      security_secret            => $security_secret,
+      security_ssl_private       => $security_ssl_server_private,
+      security_ssl_public        => $security_ssl_server_public,
+      connector                  => $connector,
+      puppetca_cadir             => $puppetca_cadir,
+      rpcauthorization           => $rpcauthorization,
+      rpcauthprovider            => $rpcauthprovider,
+      rpcauth_allow_unconfigured => $rpcauth_allow_unconfigured,
+      rpcauth_enable_default     => $rpcauth_enable_default,
+      cert_dir                   => $cert_dir,
+      policies_dir               => $policies_dir,
+    }
   }
 
-  if ($use_client) {
-    Class['::mcollective'] ->
-    class { '::mcollective::client': }
+  if ($client) {
+    class { '::mcollective::client':
+      broker_host                 => $broker_host,
+      broker_port                 => $broker_port,
+      security_provider           => $security_provider,
+      broker_vhost                => $broker_vhost,
+      broker_user                 => $broker_user,
+      broker_password             => $broker_password,
+      broker_ssl                  => $broker_ssl,
+      broker_ssl_cert             => $broker_ssl_cert,
+      broker_ssl_key              => $broker_ssl_key,
+      broker_ssl_ca               => $broker_ssl_ca,
+      security_secret             => $security_secret,
+      security_ssl_server_public  => $security_ssl_server_public,
+      security_ssl_client_private => $security_ssl_client_private,
+      security_ssl_client_public  => $security_ssl_client_public,
+      connector                   => $connector,
+      puppetca_cadir              => $puppetca_cadir,
+    }
   }
 }

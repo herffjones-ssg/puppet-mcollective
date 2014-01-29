@@ -1,34 +1,34 @@
-# == Definition: mcollective::plugin
+# Definition: mcollective::plugin
 #
 # Sets up an MCollective plugin using packages.
 #
-# === Parameters
-#
+# Parameters:
 #   ['ensure']         - Whether the plugin should be present or absent.
 #
-# === Actions
-#
+# Actions:
 # - Installs an MCollective plugin using packages.
 #
-# === Sample Usage
-#
+# Sample Usage:
 #   mcollective::plugin { 'puppetca':
 #     ensure         => present,
 #   }
 #
 define mcollective::plugin (
-  $ensure='present'
+  $ensure = 'present',
+  $client = false,
 ) {
 
-  include ::mcollective::params
+  $pkg_prefix = "mcollective-${name}"
 
-  $package = $::osfamily ? {
-    'Debian' => "mcollective-agent-${name}",
-    'RedHat' => "mcollective-plugins-${name}",
+  package { "${pkg_prefix}-agent":
+    ensure => $ensure,
+    notify => Exec['reload mcollective'],
   }
 
-  package { $package:
-    ensure  => $ensure,
-    require => $mcollective::params::plugin_require,
+  if $client == true {
+    package { "${pkg_prefix}-client":
+      ensure => $ensure,
+      notify => Exec['reload mcollective'],
+    }
   }
 }

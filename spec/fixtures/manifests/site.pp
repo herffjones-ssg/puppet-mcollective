@@ -7,7 +7,7 @@ node default {
     broker_host       => 'localhost',
     broker_port       => '61613',
     security_provider => 'psk',
-    use_client        => true,
+    client            => true,
   }
 
   ::mcollective::actionpolicy::base { 'foo': }

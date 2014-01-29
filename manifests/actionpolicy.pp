@@ -1,4 +1,4 @@
-# == Definition: mcollective::actionpolicy
+# Definition: mcollective::actionpolicy
 #
 # Sets up an action policy for an MCollective agent.
 #
@@ -9,8 +9,7 @@
 # You should also declare an mcollective::actionpolicy::base resource
 # for the agent you wish to add a rule to.
 #
-# === Parameters
-#
+# Parameters:
 #   ['ensure']         - Whether the policy rule should be present or absent.
 #   ['agent']          - The agent to which to apply the policy rule.
 #                        If unspecified, the resource title will be
@@ -29,16 +28,14 @@
 #   ['order']          - Order for concatenation.
 #                        Defaults to 50.
 #
-# === Actions
-#
+# Actions:
 # - Deploys an MCollective Action Policy rule for an agent
 #
-# === Requires
-#
+# Requires:
 # - `ripienaar/concat`
 # - `puppetlabs/stdlib`
 #
-# === Sample Usage
+# Sample Usage:
 #
 #   mcollective::actionpolicy { 'Allow puppetd status for cert foo':
 #     ensure         => present,

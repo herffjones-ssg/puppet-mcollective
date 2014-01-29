@@ -3,7 +3,7 @@
 **This module manages MCollective.**
 
 It supports:
-* generic STOMP, ActiveMQ and RabbitMQ connectors (optionally over SSL)
+* generic STOMP and RabbitMQ connectors (optionally over SSL)
 * PSK and SSL security providers
 * Action policy rules
 
@@ -19,16 +19,16 @@ This module has a single access point class:
       broker_ssl        => false,
       security_provider => 'psk',
       security_secret   => 'P@S5w0rD',
-      use_node          => true,
-      use_client        => false,
+      node              => true,
+      client            => false,
     }
 
     class { '::mcollective':
       broker_host       => 'rabbitmq.example.com',
       broker_port       => '61614',
       security_provider => 'ssl',
-      use_node          => true,
-      use_client        => true,
+      node              => true,
+      client            => true,
     }
 
 ## Classes
@@ -39,27 +39,35 @@ This module provides two classes to configure MCollective nodes and clients.
 
 Installs and configures an MCollective node:
 
-    class { '::mcollective':
+    class { '::mcollective::node':
       broker_host       => 'rabbitmq.example.com',
       broker_port       => '61614',
       security_provider => 'psk',
       security_secret   => 'P@S5w0rD',
-      use_node          => false,
     }
-    include ::mcollective::node
+
+    class { '::mcollective::node':
+      broker_host                 => 'rabbitmq.example.com',
+      broker_port                 => '61614',
+      security_provider           => 'ssl',
+    }
 
 ### mcollective::client
 
 Installs and configures an MCollective client:
 
-    class { '::mcollective':
+    class { '::mcollective::client':
       broker_host       => 'rabbitmq.example.com',
       broker_port       => '61614',
       security_provider => 'psk',
       security_secret   => 'P@S5w0rD',
-      use_node          => false,
     }
-    include ::mcollective::client
+ 
+    class { '::mcollective::client':
+      broker_host       => 'rabbitmq.example.com',
+      broker_port       => '61614',
+      security_provider => 'ssl',
+    }
 
 ## Definitions
 
@@ -87,7 +95,7 @@ Deploys a public client SSL certificate for authentication:
 
     mcollective::client::certificate { 'foo':
       ensure         => present,
-      key_source_dir => 'puppet:///modules/module_name/path/to/dir/',
+      key_source_dir => 'puppet:///module_name/path/to/dir/',
     }
 
 ### mcollective::actionpolicy::base

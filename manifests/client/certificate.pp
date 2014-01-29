@@ -1,4 +1,4 @@
-# == Definition: mcollective::client::certificate
+# Definition: mcollective::client::certificate
 #
 # This definition provides a way to manage SSL client certificates
 # for MCollective.
@@ -8,23 +8,20 @@
 #
 # You should declare mcollective::node before using this.
 #
-# === Parameters
-#
+# Parameters:
 #   ['ensure']         - Whether the certificate should be present or absent.
 #   ['key_source']     - The source for the key file.
 #   ['key_source_dir'] - The directory where key files are stored.
 #                        If specified, overrides 'key_source'
 #                        with ${key_dir}/${name}.pem
 #
-# === Actions
-#
+# Actions:
 # - Deploys an MCollective SSL certificate
 #
-# === Sample Usage
-#
+# Sample Usage:
 #   mcollective::client::certificate { 'foo':
 #     ensure  => present,
-#     key_source_dir => 'puppet:///modules/module_name/path/to/dir/',
+#     key_source_dir => 'puppet:///module_name/path/to/dir/',
 #   }
 #
 define mcollective::client::certificate (

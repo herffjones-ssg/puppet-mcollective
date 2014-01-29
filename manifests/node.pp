@@ -1,15 +1,14 @@
-# == Class: mcollective::node
+# Class: mcollective::node
 #
 # This class provides a simple way to deploy an MCollective node.
 # It will install and configure the necessary packages.
 #
-# This module supports generic STOMP, ActiveMQ and RabbitMQ connectors,
+# This module supports generic STOMP and RabbitMQ connectors,
 # with optional SSL support.
 #
 # It supports PSK and SSL as authentication methods.
 #
-# === Parameters
-#
+# Parameters:
 #   ['broker_host']       - The middleware broker host to use.
 #   ['broker_port']       - The middleware broker port to use.
 #   ['broker_vhost']      - The middleware broker vhost to use.
@@ -34,17 +33,7 @@
 #                              private key (shared).
 #   ['security_ssl_public']  - If SSL is used, the path to the SSL
 #                              public key (shared).
-#   ['security_aes_private'] - If AES is used, the path to the AES
-#                                     private server key (shared).
-#   ['security_aes_public']  - If AES is used, the path to the AES
-#                                     public server key (shared).
-#   ['security_aes_send_pubkey']    - If AES is used, whether to send
-#                                     the AES public key.
-#   ['security_aes_learn_pubkeys']  - If AES is used, whether to learn
-#                                     the AES public keys.
-#   ['security_aes_enforce_ttl']    - If AES is used, whether to enforce TTL.
-#   ['connector']         - The connector to use. Either 'stomp', 'activemq'
-#                           or 'rabbitmq'.
+#   ['connector']         - The connector to use. Either 'stomp' or 'rabbitmq'.
 #                           Defaults to 'rabbitmq'.
 #   ['puppetca_cadir']    - Path to the Puppet CA directory.
 #   ['rpcauthorization']  - Whether to use RPC authorization.
@@ -61,19 +50,8 @@
 #                           Defaults to '/etc/mcollective/ssl/clients'.
 #   ['policies_dir']      - Path to the policies directory.
 #                           Defaults to '/etc/mcollective/policies'.
-#   ['direct_addressing'] - Enable direct addressing.
-#                           Defaults to '0'.
-#   ['registration']      - The registration plugin to use
-#                           Defaults to 'AgentList.
-#   ['registerinterval']  - Registration interval
-#                           Defaults to '300'.
-#   ['registration_collective']    - The registration collective to use
-#                                    Defaults to undef.
-#   ['ssl_source_dir']    - Where to get certificates from.
-#                           Defaults to undef.
 #
-# === Actions
-#
+# Actions:
 # - Deploys an MCollective node
 #
 # Sample Usage:
@@ -91,68 +69,162 @@
 #   }
 #
 class mcollective::node (
-  $broker_host = $mcollective::broker_host,
-  $broker_port = $mcollective::broker_port,
-  $security_provider = $mcollective::security_provider,
-  $broker_vhost = $mcollective::broker_vhost,
-  $broker_user = $mcollective::broker_user,
-  $broker_password = $mcollective::broker_password,
-  $broker_ssl = $mcollective::broker_ssl,
-  $broker_ssl_cert = "/var/lib/puppet/ssl/certs/${::fqdn}.pem",
-  $broker_ssl_key = "/var/lib/puppet/ssl/private_keys/${::fqdn}.pem",
-  $broker_ssl_ca = '/var/lib/puppet/ssl/certs/ca.pem',
-  $security_secret = $mcollective::security_secret,
-  $security_ssl_private = $mcollective::security_ssl_server_private,
-  $security_ssl_public = $mcollective::security_ssl_server_public,
-  $security_aes_private = $mcollective::security_aes_server_private,
-  $security_aes_public = $mcollective::security_aes_server_public,
-  $security_aes_send_pubkey = $mcollective::security_aes_send_pubkey,
-  $security_aes_learn_pubkeys = $mcollective::security_aes_learn_pubkeys,
-  $security_aes_enforce_ttl = $mcollective::security_aes_enforce_ttl,
-  $connector = $mcollective::connector,
-  $puppetca_cadir = $mcollective::puppetca_cadir,
-  $rpcauthorization = $mcollective::rpcauthorization,
-  $rpcauthprovider = $mcollective::rpcauthprovider,
-  $rpcauth_allow_unconfigured = $mcollective::rpcauth_allow_unconfigured,
-  $rpcauth_enable_default = $mcollective::rpcauth_enable_default,
-  $cert_dir = $mcollective::cert_dir,
-  $policies_dir = $mcollective::policies_dir,
-  $direct_addressing = $mcollective::direct_addressing,
-  $ssl_source_dir = $mcollective::ssl_source_dir,
-  $registration = $mcollective::registration,
-  $registration_collective = $mcollective::registration_collective,
-  $registerinterval = $mcollective::registerinterval,
-) {
+  $broker_host,
+  $broker_port,
+  $security_provider,
+  $broker_vhost = $mcollective::params::broker_vhost,
+  $broker_user = $mcollective::params::broker_user,
+  $broker_password = $mcollective::params::broker_password,
+  $broker_ssl = $mcollective::params::broker_ssl,
+  $broker_ssl_cert = $mcollective::params::broker_ssl_cert,
+  $broker_ssl_key = $mcollective::params::broker_ssl_key,
+  $broker_ssl_ca = $mcollective::params::broker_ssl_ca,
+  $security_secret = $mcollective::params::security_secret,
+  $security_ssl_private = $mcollective::params::security_ssl_server_private,
+  $security_ssl_public = $mcollective::params::security_ssl_server_public,
+  $connector = $mcollective::params::connector,
+  $puppetca_cadir = $mcollective::params::puppetca_cadir,
+  $rpcauthorization = $mcollective::params::rpcauthorization,
+  $rpcauthprovider = $mcollective::params::rpcauthprovider,
+  $rpcauth_allow_unconfigured = $mcollective::params::rpcauth_allow_unconfigured,
+  $rpcauth_enable_default = $mcollective::params::rpcauth_enable_default,
+  $cert_dir = $mcollective::params::cert_dir,
+  $policies_dir = $mcollective::params::policies_dir,
+  $mco_agent_path = "/usr/libexec/mcollective/mcollective/agent/",
+  $mco_application_path = "/usr/libexec/mcollective/mcollective/application/",
+) inherits ::mcollective::params {
 
-  if !defined(Class['::mcollective']) {
-    fail ('You must declare the mcollective class before the mcollective::node class')
+  # Recent Upstart requires daemonize to be set to 0
+  # warning: do not name this variable $daemonize!
+  $mcollective_daemonize = $::operatingsystem ? {
+    default => 1
   }
 
-  include ::mcollective::params
-  include ::ruby::gems
+  file { [$cert_dir, $policies_dir]:
+    ensure  => directory,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0700',
+    recurse => true,
+    purge   => true,
+    require => Package['mcollective'],
+  }
 
-  class { '::mcollective::node::packages': } ->
-  file { '/etc/mcollective/facts.yaml':
-    ensure   => present,
-    backup   => false,
-    owner    => 'root',
-    group    => 'root',
-    mode     => '0400',
-    content  => template('mcollective/facts.yaml.erb'),
-    loglevel => 'warning',  # this is needed to avoid it being logged and reported
-                            # on every run
-                            # avoid including highly-dynamic facts as they will
-                            # cause unnecessary template writes and
-                            # service restarts
-  } ->
-  class { '::mcollective::node::files': } ~>
-  class { '::mcollective::node::service': }
+  $mcollective_libdir = $mcollective::params::libdir
 
-  # Plugins need to refresh MCollective
-  # Refreshing requires files
-  Mcollective::Plugin <| |> ~>
-  class { '::mcollective::node::refresh': }
-  Class['::mcollective::node::files'] ->
-  Class['::mcollective::node::refresh']
+  case $::osfamily {
 
+    'Debian': {
+
+      package { 'libstomp-ruby':
+        ensure => absent,
+      }
+      package { 'ruby-stomp':
+        ensure  => present,
+        require => Package['libstomp-ruby'],
+        notify  => Service['mcollective'],
+      }
+
+      augeas { 'Enable mcollective':
+        lens    => 'Shellvars.lns',
+        incl    => '/etc/default/mcollective',
+        changes => 'set RUN yes',
+        require => Package['mcollective'],
+        notify  => Service['mcollective'],
+      }
+
+    }
+
+    'RedHat': {
+      package { ['rubygem-net-ping', 'rubygem-stomp']:
+        ensure => present,
+        notify => Service['mcollective'],
+      }
+
+    }
+
+    default: {
+      fail("Unsupported OS family: ${::osfamily}")
+    }
+
+  }
+
+  package { 'mcollective':
+    ensure  => present,
+    require => $mcollective::params::server_require,
+  }
+
+  service { 'mcollective':
+    ensure    => running,
+    hasstatus => true,
+    enable    => true,
+    require   => Package['mcollective'],
+  }
+
+  exec { 'reload mcollective':
+    #command    => 'pkill -USR1 -f "ruby.*mcollectived"',
+    command     => 'service mcollective reload-agents',
+    path        => '/bin:/usr/bin:/sbin:/usr/sbin',
+    refreshonly => true,
+  }
+
+  file { '/etc/mcollective/server.cfg':
+    ensure  => present,
+    mode    => '0640',
+    owner   => 'root',
+    group   => 'root',
+    content => template('mcollective/server.cfg.erb'),
+    notify  => Service['mcollective'],
+    require => Package['mcollective'],
+  }
+
+  file { "/usr/local/bin/facter_to_yaml.rb":
+    source  => "puppet:///modules/mcollective/facter_to_yaml.rb",
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0700',
+  }
+
+  file { "mcollective_agents":
+    ensure  => directory,
+    path    => $mco_agent_path,
+    source  => "puppet:///modules/mcollective/agent/",
+    recurse => remote,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0755',
+    notify  => Exec['reload mcollective'],
+  }
+
+  file { "mcollective_application":
+    ensure  => directory,
+    path    => $mco_application_path,
+    source  => "puppet:///modules/mcollective/application/",
+    recurse => remote,
+    owner   => 'root',
+    group   => 'root',
+    mode    => '0755',
+    notify  => Exec['reload mcollective'],
+  }
+
+  cron { "factertoyaml":
+    command => "/usr/local/bin/facter_to_yaml.rb",
+    user    => root,
+    minute  => [1, 31],
+    require => File["/usr/local/bin/facter_to_yaml.rb"],
+  }
+  #  file { '/etc/mcollective/facts.yaml':
+  #  ensure   => present,
+  #  backup   => false,
+  #  owner    => 'root',
+  #  group    => 'root',
+  #  mode     => '0400',
+  #  loglevel => debug,  # this is needed to avoid it being logged and reported
+  #                      # on every run
+  #                      # avoid including highly-dynamic facts as they will
+  #                      # cause unnecessary template writes
+#    content => template('mcollective/facts.yaml.erb'),
+#  content  => inline_template('<%= Hash[scope.to_hash.reject { |k,v| k.to_s =~ /(uptime|timestamp|memory|free|swap|path)/ }.sort].to_yaml %>'),
+#    require  => Package['mcollective'],
+#    }
 }

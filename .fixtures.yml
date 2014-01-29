@@ -1,7 +1,0 @@
-fixtures:
-  repositories:
-    "ruby": "git://github.com/camptocamp/puppet-ruby.git"
-    "stdlib": "git://github.com/puppetlabs/puppetlabs-stdlib.git"
-    "concat": "git://github.com/ripienaar/puppet-concat.git"
-  symlinks:
-    "mcollective": "#{source_dir}"

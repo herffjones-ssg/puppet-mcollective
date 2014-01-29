@@ -1,69 +1,58 @@
 topicprefix = /topic/
 main_collective = mcollective
 collectives = mcollective
-libdir = <%= @libdir %>
+libdir = <%= @mcollective_libdir %>
 logfile = /var/log/mcollective.log
 loglevel = info
-daemonize = <%= @daemonize %>
-direct_addressing = <%= scope.lookupvar('mcollective::node::direct_addressing') %>
+daemonize = <%= @mcollective_daemonize %>
 
 # Plugins
 securityprovider = <%= @security_provider %>
 <% if @security_provider == 'psk' %>
-plugin.psk = <%= scope.lookupvar('mcollective::node::security_secret') %>
+plugin.psk = <%= @security_secret %>
 <% end %>
 <% if @security_provider == 'ssl' %>
 plugin.ssl_server_private = <%= @security_ssl_private %>
 plugin.ssl_server_public = <%= @security_ssl_public %>
-plugin.ssl_client_cert_dir = <%= scope.lookupvar('mcollective::node::cert_dir') %>
+plugin.ssl_client_cert_dir = /etc/mcollective/ssl/clients/
 <% end %>
-<% if @security_provider == 'aes_security' -%>
-plugin.aes.client_cert_dir = <%= scope.lookupvar('mcollective::node::cert_dir') %>
-plugin.aes.server_private = <%= scope.lookupvar('mcollective::node::security_aes_private')%>
-plugin.aes.server_public = <%= scope.lookupvar('mcollective::node::security_aes_public')%>
-plugin.aes.send_pubkey = <%= scope.lookupvar('mcollective::node::security_aes_send_pubkey')%>
-plugin.aes.learn_pubkeys = <%= scope.lookupvar('mcollective::node::security_aes_learn_pubkeys')%>
-plugin.aes.enforce_ttl = <%= scope.lookupvar('mcollective::node::security_aes_enforce_ttl')%>
-<% end -%>
 
-connector = <%= scope.lookupvar('mcollective::node::connector') %>
-<% if scope.lookupvar('mcollective::node::connector') == 'rabbitmq' %>
-plugin.rabbitmq.vhost = <%= scope.lookupvar('mcollective::node::broker_vhost') %>
+connector = <%= @connector %>
+<% if @connector == 'rabbitmq' %>
+plugin.rabbitmq.vhost = <%= @broker_vhost %>
 <% end %>
-plugin.<%= scope.lookupvar('mcollective::node::connector') %>.pool.size = 1
-plugin.<%= scope.lookupvar('mcollective::node::connector') %>.pool.1.host = <%= scope.lookupvar('mcollective::node::broker_host') %>
-plugin.<%= scope.lookupvar('mcollective::node::connector') %>.pool.1.port = <%= scope.lookupvar('mcollective::node::broker_port') %>
-plugin.<%= scope.lookupvar('mcollective::node::connector') %>.pool.1.user = <%= scope.lookupvar('mcollective::node::broker_user') %>
-plugin.<%= scope.lookupvar('mcollective::node::connector') %>.pool.1.password = <%= scope.lookupvar('mcollective::node::broker_password') %>
-plugin.<%= scope.lookupvar('mcollective::node::connector') %>.pool.1.ssl = <%= scope.lookupvar('mcollective::node::broker_ssl') %>
-<% if scope.lookupvar('mcollective::node::broker_ssl') %>
-plugin.<%= scope.lookupvar('mcollective::node::connector') %>.pool.1.ssl.cert = <%= scope.lookupvar('mcollective::node::broker_ssl_cert') %>
-plugin.<%= scope.lookupvar('mcollective::node::connector') %>.pool.1.ssl.key = <%= scope.lookupvar('mcollective::node::broker_ssl_key') %>
-plugin.<%= scope.lookupvar('mcollective::node::connector') %>.pool.1.ssl.ca = <%= scope.lookupvar('mcollective::node::broker_ssl_ca') %>
+plugin.<%= @connector %>.pool.size = 1
+plugin.<%= @connector %>.pool.host1 = <%= @broker_host %>
+plugin.<%= @connector %>.pool.port1 = <%= @broker_port %>
+plugin.<%= @connector %>.pool.user1 = <%= @broker_user %>
+plugin.<%= @connector %>.pool.password1 = <%= @broker_password %>
+plugin.<%= @connector %>.pool.ssl1 = <%= @broker_ssl %>
+<% if @broker_ssl %>
+plugin.<%= @connector %>.pool.ssl.cert1 = <%= @broker_ssl_cert %>
+plugin.<%= @connector %>.pool.ssl.key1 = <%= @broker_ssl_key %>
+plugin.<%= @connector %>.pool.ssl.ca1 = <%= @broker_ssl_ca %>
 <% end %>
 
 <% if @rpcauthorization %>
 # Authorization
 rpcauthorization = 1
-rpcauthprovider = <%= scope.lookupvar('mcollective::node::rpcauthprovider') %>
+rpcauthprovider = <%= @rpcauthprovider %>
 <% if @rpcauthprovider == 'action_policy' %>
-plugin.actionpolicy.allow_unconfigured = <%= scope.lookupvar('mcollective::node::rpcauth_allow_unconfigured') %>
-plugin.actionpolicy.enable_default = <%= scope.lookupvar('mcollective::node::rpcauth_enable_default') %>
+plugin.actionpolicy.allow_unconfigured = <%= @rpcauth_allow_unconfigured %>
+plugin.actionpolicy.enable_default = <%= @rpcauth_enable_default %>
 <%- end %>
 <%- end %>
 
 plugin.puppetca.cadir = <%= @puppetca_cadir %>
 
+<% if scope.lookupvar('mcollective::role::real_resource_type_whitelist') %>plugin.puppet.resource_type_whitelist = <%= scope.lookupvar('mcollective::role::real_resource_type_whitelist') %><% end -%>
+
 # Facts
 factsource = yaml
-plugin.yaml = /etc/mcollective/facts.yaml
+plugin.yaml = /etc/mcollective/facter_generated.yaml:/etc/mcollective/facts.yaml
 
-classesfile = /var/lib/puppet/state/classes.txt
+classesfile = /var/lib/puppet/classes.txt
 
-# Registration
-registerinterval = <%= scope.lookupvar('mcollective::node::registerinterval') %>
-registration = <%= scope.lookupvar('mcollective::node::registration') %>
-<% if scope.lookupvar('mcollective::node::registration_collective') != :undef %>
-registration_collective = <%= scope.lookupvar('mcollective::node::registration_collective') %>
-<%- end %>
+registerinterval = 300
+registration = Agentlist
 
